@@ -8,7 +8,7 @@ USYD project
 
 ### Steps:
 
-a) Open Terminal. You can do this by pressing **Command + Space** and typing "Terminal"(mac users)/**Win + R**(windows user).
+a) Open Terminal. You can do this by pressing **Command + Space** and typing "Terminal"(mac users)/**Win + R** and typing "cmd"(windows user).
 
 b) Navigate to your project folder using the `cd` command. For example, if your project folder is on the Desktop, type:
 
@@ -34,19 +34,20 @@ The web application consists of three main pages:
 - This is the landing page when you first enter the application. Currently, it is a blank page for
 future development.
 2. Upload Page:
-- Click the upload button at the top navigation bar to enter the upload file page.
+- Click the `upload` button at the top navigation bar to enter the upload file page.
 - Here, you can upload files that need preprocessing.
-- After preprocessing, you can download the processed files by clicking the download button.
+- After preprocessing, you can download the processed files by clicking the `download` button.
 3. Classify Page:
   
-Click the classify button at the top navigation bar to enter the classification page.
+Click the `classify` button at the top navigation bar to enter the classification page.
 
 This page has two main functionalities:
 #### Functionality 1:
-- Upload an initial file and click start. The system will automatically preprocess the file.
+- Upload an initial file and click `start`. The system will automatically preprocess the file.
 - Each word will have a dropdown menu below it, allowing you to classify each word into categories (0-8).
 - The page provides options to select the number of words displayed per page(100/150/200/300).
-- Use the next button to go to the next page for further classification.  Use the save button to save all classified words and download the results as an Excel file.
+- Use the `next` button to go to the next page for further classification.
+- Use the `save` button to save all classified words and download the results as an Excel file.
 
 #### Functionality 2:
 - Upload an initial file and an Excel file. This is useful if you have previously started classifying a file but did not complete it.
