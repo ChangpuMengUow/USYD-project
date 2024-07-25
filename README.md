@@ -14,9 +14,10 @@ b) Navigate to your project folder using the `cd` command. For example, if your 
 
 ```bash
 cd ~/Desktop/YourProjectFolder
+```
 
 c) Deploy the local server by running the following command:
 
 ```bash
 python -m http.server 8000
-
+```
