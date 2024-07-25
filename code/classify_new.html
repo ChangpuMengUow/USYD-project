@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Words/Page Selection</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .word-container {
+            display: inline-block;
+            margin: 5px;
+        }
+        .word-select {
+            display: block;
+            margin-top: 5px;
+        }
+        .line-container {
+            margin-bottom: 20px;
+        }
+        .disabled {
+            background-color: #ccc;
+            pointer-events: none;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="upload.html">Upload</a></li>
+            <li><a href="classify.html">Words/Page Selection</a></li>
+            <li><a href="#">Button 4</a></li>
+        </ul>
+    </nav>
+    <div class="container">
+        <div class="sidebar">
+            <p>Words/Page</p>
+            <button id="btn100" class="disabled">100</button>
+            <button id="btn150">150</button>
+            <button id="btn200">200</button>
+            <button id="btn300">300</button>
+        </div>
+        <div class="main-content">
+            <div id="documentContent">
+            </div>
+            <div class="button-container">
+                <button id="saveButton">Save</button>
+                <button id="nextButton">Next</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.6.0/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.5/dist/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.45.0/docxtemplater.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const contentDiv = document.getElementById('documentContent');
+            const buttons = document.querySelectorAll('.sidebar button');
+            const saveButton = document.getElementById('saveButton');
+            const nextButton = document.getElementById('nextButton');
+
+            let maxSelects = 100;
+            let currentPage = 0;
+            let allText = "";
+            let selections = [];
+            let lines = [];
+            let currentLineIndex = 0;
+
+            const disableButton = (btn) => {
+                buttons.forEach(button => button.classList.remove('disabled'));
+                if (btn) {
+                    btn.classList.add('disabled');
+                }
+            };
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const value = parseInt(this.textContent);
+                    maxSelects = value;
+                    disableButton(this);
+                    renderDocument(false); // Render current page with new maxSelects
+                });
+            });
+
+            const fetchDocument = () => {
+                return fetch('./1.docx')
+                    .then(response => response.arrayBuffer())
+                    .then(arrayBuffer => {
+                        const zip = new PizZip(arrayBuffer);
+                        const doc = new window.docxtemplater(zip, {
+                            paragraphLoop: true,
+                            linebreaks: true,
+                        });
+
+                        doc.render();
+
+                        allText = doc.getFullText();
+                        lines = allText.split(/(?<=[.?!…;])/); // 使用正则表达式拆分文本
+                    })
+                    .catch(error => console.error('Error:', error));
+            };
+
+            const renderDocument = (isNextPage) => {
+                contentDiv.innerHTML = '';  // Clear existing content
+                let selectCount = 0;
+                let startIndex = isNextPage ? currentLineIndex : currentLineIndex - maxSelects;
+                if (startIndex < 0) startIndex = 0;
+
+                for (let i = startIndex; i < lines.length; i++) {
+                    const line = lines[i];
+                    const lineDiv = document.createElement('div');
+                    lineDiv.classList.add('line-container');
+
+                    const words = line.trim().split(' ');
+
+                    words.forEach(word => {
+                        const wordContainer = document.createElement('div');
+                        wordContainer.classList.add('word-container');
+
+                        const wordSpan = document.createElement('span');
+                        wordSpan.textContent = word;
+
+                        const select = document.createElement('select');
+                        select.classList.add('word-select');
+                        ['0', '1', '2', '3', '4', '5', '6', '7', '8'].forEach(value => {
+                            const option = document.createElement('option');
+                            option.value = value;
+                            option.text = value;
+                            select.appendChild(option);
+                        });
+
+                        wordContainer.appendChild(wordSpan);
+                        wordContainer.appendChild(select);
+                        lineDiv.appendChild(wordContainer);
+
+                        selectCount++;
+                    });
+
+                    contentDiv.appendChild(lineDiv);
+
+                    if (selectCount >= maxSelects) {
+                        currentLineIndex = i + 1; // Update currentLineIndex to the next line for the next page
+                        break;
+                    }
+                }
+            };
+
+            const saveSelections = () => {
+                const wordContainers = contentDiv.querySelectorAll('.word-container');
+                wordContainers.forEach(container => {
+                    const word = container.querySelector('span').textContent;
+                    const selection = container.querySelector('select').value;
+                    selections.push({ word, selection });
+                });
+            };
+
+            const saveToExcel = () => {
+                saveSelections(); // Ensure current page selections are saved
+                const worksheet = XLSX.utils.json_to_sheet(selections);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Selections");
+                XLSX.writeFile(workbook, "selections.xlsx");
+            };
+
+            saveButton.addEventListener('click', saveToExcel);
+
+            nextButton.addEventListener('click', () => {
+                saveSelections();
+                renderDocument(true); // Render next page
+            });
+
+            fetchDocument().then(() => renderDocument(false));  // Initial fetching and rendering
+        });
+    </script>
+</body>
+</html>

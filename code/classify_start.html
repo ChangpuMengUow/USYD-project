@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload DOCX and Excel</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <py-env>
+        - pandas
+        - python-docx
+        - openpyxl
+        - paths:
+            - ./pre.py
+    </py-env>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="upload.html">Upload</a></li>
+            <li><a href="classify_start.html">Classify</a></li>
+        </ul>
+    </nav>
+    <h1>Upload DOCX and Excel File</h1>
+    <form id="upload-form">
+        <label for="docx-upload">Choose a DOCX file:</label>
+        <input type="file" id="docx-upload" accept=".docx"><br><br>
+        <label for="excel-upload">Choose an Excel file:</label>
+        <input type="file" id="excel-upload" accept=".xlsx"><br><br>
+        <button type="button" id="startProcessingButton">Start</button>
+    </form>
+
+    <py-script>
+        def process_files(docx_content_base64, excel_content_base64=None):
+            from pre import getdoc
+            import pandas as pd
+            from io import BytesIO
+            import base64
+
+            # Process the DOCX file
+            updated_docx = getdoc(docx_content_base64)
+
+            # Process the Excel file if provided
+            excel_lines = 0
+            if excel_content_base64:
+                excel_bytes = base64.b64decode(excel_content_base64)
+                excel_df = pd.read_excel(BytesIO(excel_bytes))
+                excel_lines = len(excel_df)
+
+            return updated_docx, excel_lines
+
+        from js import window
+        window.process_files = process_files
+    </py-script>
+
+    <script>
+        window.uploadedDocxFile = null;
+        window.uploadedExcelFile = null;
+        window.excelLines = 0;
+
+        document.getElementById('docx-upload').addEventListener('change', function() {
+            window.uploadedDocxFile = null;
+
+            const fileInput = document.getElementById('docx-upload');
+            if (!fileInput.files.length) {
+                alert("No DOCX file selected. Please choose a DOCX file to upload.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                alert("Invalid file type. Please upload a DOCX file.");
+                fileInput.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                window.uploadedDocxFile = {
+                    content: event.target.result,
+                    name: file.name
+                };
+                alert("DOCX file uploaded successfully.");
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        document.getElementById('excel-upload').addEventListener('change', function() {
+            window.uploadedExcelFile = null;
+
+            const fileInput = document.getElementById('excel-upload');
+            if (!fileInput.files.length) {
+                alert("No Excel file selected. Please choose an Excel file to upload.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+                alert("Invalid file type. Please upload an Excel file.");
+                fileInput.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                window.uploadedExcelFile = {
+                    content: event.target.result,
+                    name: file.name
+                };
+                alert("Excel file uploaded successfully.");
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        async function startProcessing() {
+            if (!window.uploadedDocxFile) {
+                alert("No DOCX file uploaded. Please upload a DOCX file.");
+                return;
+            }
+
+            const docxContentBase64 = arrayBufferToBase64(window.uploadedDocxFile.content);
+            const excelContentBase64 = window.uploadedExcelFile ? arrayBufferToBase64(window.uploadedExcelFile.content) : null;
+
+            try {
+                const [updatedDocxBase64, excelLines] = await process_files(docxContentBase64, excelContentBase64);
+                window.excelLines = excelLines;
+                const updatedDocxContent = base64ToArrayBuffer(updatedDocxBase64);
+
+                // Save the updated DOCX file content and excel lines to localStorage
+                localStorage.setItem('docxContent', updatedDocxBase64);
+                localStorage.setItem('excelLines', excelLines);
+                if (excelContentBase64) {
+                    localStorage.setItem('uploadedExcel', excelContentBase64);
+                }
+
+                alert("Files processed successfully. Redirecting to classify page...");
+                window.location.href = "classify.html";
+
+            } catch (error) {
+                console.error("Processing files failed: ", error);
+            }
+        }
+
+        document.getElementById('startProcessingButton').addEventListener('click', startProcessing);
+    </script>
+</body>
+</html>

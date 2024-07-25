@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload and Download DOCX</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+    <py-env>
+        - pandas
+        - python-docx
+        - paths:
+            - ./pre.py
+    </py-env>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="upload.html">Upload</a></li>
+            <li><a href="classify_start.html">Classify</a></li>
+        </ul>
+    </nav>
+    <h1>Upload and Download DOCX File</h1>
+    <form id="upload-form">
+        <label for="file-upload">Choose a DOCX file:</label>
+        <input type="file" id="file-upload" accept=".docx">
+        <button type="button" id="downloadFileButton">Download</button>
+    </form>
+
+    <py-script>
+        def main(file_content_base64):
+            from pre import getdoc
+            return getdoc(file_content_base64)
+
+        from js import window
+        window.main = main
+    </py-script>
+
+    <script>
+        window.uploadedFile = null;
+
+        document.getElementById('file-upload').addEventListener('change', function() {
+            window.uploadedFile = null;  // 清除之前上传的文件内容
+            console.log("File selection changed, previous file cleared");
+
+            const fileInput = document.getElementById('file-upload');
+            if (!fileInput.files.length) {
+                alert("No file selected. Please choose a DOCX file to upload.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                alert("Invalid file type. Please upload a DOCX file.");
+                fileInput.value = "";  // 清空文件输入框
+                return;
+            }
+
+            console.log("File selected: " + file.name);
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                console.log("File read complete");
+                window.uploadedFile = {
+                    content: event.target.result,
+                    name: file.name
+                };
+                alert("File uploaded successfully.");
+            };
+
+            reader.readAsArrayBuffer(file);
+            console.log("File reader set up");
+        });
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        async function downloadFile() {
+        if (!window.uploadedFile) {
+            alert("没有上传文件。请先上传文件。");
+            return;
+        }
+
+        const pyContent = arrayBufferToBase64(window.uploadedFile.content);
+
+        try {
+            console.log(pyContent);
+            const pysResult = await main(pyContent);
+            console.log(pysResult);
+            // const updatedContentBase64 = pysResult.stdout.trim();  // 获取并清理输出
+
+            // if (updatedContentBase64.startsWith("Error:")) {
+            //     alert("Python 脚本错误: " + updatedContentBase64);
+            //     return;
+            // }
+
+            window.uploadedFile.content = base64ToArrayBuffer(pysResult);
+
+            const blob = new Blob([window.uploadedFile.content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            const blobUrl = URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = blobUrl;
+            downloadLink.download = window.uploadedFile.name;
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            console.log("下载链接已创建并点击");
+        } catch (error) {
+            console.error("运行 Python 脚本失败: ", error);
+        }
+    }
+
+    document.getElementById('downloadFileButton').addEventListener('click', downloadFile);
+
+    </script>
+    
+</body>
+</html>
