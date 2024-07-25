@@ -52,5 +52,5 @@ This page has two main functionalities:
 - Upload an initial file and an Excel file. This is useful if you have previously started classifying a file but did not complete it.
 - When you upload both files, the system will continue from where you left off, showing the remaining content for further classification.
 - this helps you seamlessly continue your work from the last session.
--
-- By following these steps, you can efficiently deploy and use your local server for file preprocessing and classification tasks.
+
+  By following these steps, you can efficiently deploy and use your local server for file preprocessing and classification tasks.
