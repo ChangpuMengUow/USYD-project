@@ -34,8 +34,9 @@ The web application consists of three main pages:
 - This is the landing page when you first enter the application. Currently, it is a blank page for
 future development.
 2. Upload Page:
-- Click the upload button at the top navigation bar to enter the upload file page.  Here, you can upload files that need preprocessing.  After preprocessing, you can download the processed files by clicking the download
-button.
+- Click the upload button at the top navigation bar to enter the upload file page.
+- Here, you can upload files that need preprocessing.
+- After preprocessing, you can download the processed files by clicking the download button.
 3. Classify Page:
 Click the classify button at the top navigation bar to enter the classification page. This page has two main functionalities:
 ### Functionality 1:
