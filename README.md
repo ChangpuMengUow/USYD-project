@@ -38,13 +38,15 @@ future development.
 - Here, you can upload files that need preprocessing.
 - After preprocessing, you can download the processed files by clicking the download button.
 3. Classify Page:
-Click the classify button at the top navigation bar to enter the classification page. This page has two main functionalities:
-### Functionality 1:
+  
+Click the classify button at the top navigation bar to enter the classification page. 
+This page has two main functionalities:
+#### Functionality 1:
 - Upload an initial file and click start. The system will automatically preprocess the file.
 - Each word will have a dropdown menu below it, allowing you to classify each word into categories (0-8).
 - The page provides options to select the number of words displayed per page(100/150/200/300).
 - Use the next button to go to the next page for further classification.  Use the save button to save all classified words and download the results as an Excel file.
 
-### Functionality 2:
+#### Functionality 2:
 - Upload an initial file and an Excel file. This is useful if you have previously started classifying a file but did not complete it.
 - When you upload both files, the system will continue from where you left off, showing the remaining content for further classification.  his helps you seamlessly continue your work from the last session. By following these steps, you can efficiently deploy and use your local server for file preprocessing and classification tasks.
